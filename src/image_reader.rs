@@ -21,6 +21,9 @@ impl ImageReader {
         )
     }
 
+
+
+    // pub fn data(&mut self) -> &mut Cursor<Vec<u8>> {
     pub fn data(&mut self) -> &mut Cursor<Vec<u8>> {
         &mut self.data
     }
