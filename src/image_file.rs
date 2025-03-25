@@ -4,11 +4,11 @@ use std::io::Read;
 use std::io::Cursor;
 use std::path::Path;
 
-pub struct ImageReader {
+pub struct ImageFile {
     data: Cursor<Vec<u8>>,
 }
 
-impl ImageReader {
+impl ImageFile {
     pub fn open<P>(path:P) -> io::Result<Self>
     where P: AsRef<Path>
     {
@@ -17,7 +17,7 @@ impl ImageReader {
         let _ = file.read_to_end(&mut buf)?;
         let data  = Cursor::new(buf);
         Ok(
-            ImageReader {data}
+            Self {data}
         )
     }
 
