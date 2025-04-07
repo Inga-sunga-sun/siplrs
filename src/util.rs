@@ -5,6 +5,7 @@ impl GrayValue for u8 {}
 impl GrayValue for u16 {}
 
 
+
 pub fn read_u8(cursor:&mut Cursor<&Vec<u8>>, buf: &mut [u8; 1]) -> u8 {
     let _ = cursor.read_exact(buf);
     let value = u8::from_be_bytes(*buf);
