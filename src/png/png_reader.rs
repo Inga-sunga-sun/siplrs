@@ -6,6 +6,7 @@ use crate::util::{read_u16, read_u32, read_u8, GrayValue};
 use crc32fast::hash;
 use miniz_oxide::inflate::decompress_to_vec_zlib;
 use std::io::{Cursor, Read};
+use crate::image_buffer::Image;
 use crate::png::png_image;
 
 
@@ -112,9 +113,9 @@ impl PngReader {
         self.header = chunk_data
     }
 
-    pub fn read_header(reader:&PngReader)
+    pub fn read_header(&self) -> Image
     {
-        let mut cursor = Cursor::new(&reader.header);
+        let mut cursor = Cursor::new(&self.header);
         let mut buf_u8 = [0u8;1];
         let mut buf_u32 = [0u8;4];
 
@@ -125,43 +126,52 @@ impl PngReader {
         let compression_method = read_u8(&mut cursor, &mut buf_u8);
         let filter_method = read_u8(&mut cursor, &mut buf_u8);
         let interlace_method = read_u8(&mut cursor, &mut buf_u8);
+        
+        let mut image = Image::new(width, height, bit_depth);
+        
+        match image {
+            Image::Gray8(ref mut img) => {
+                self.read_data8(img)
+            },
+            Image::Gray16(ref mut img) => {
+                self.read_data16(img)
+            },
+            _ => unimplemented!(),
+        }
+        image
 
 
     }
 
-    pub fn read_data16(&self, width:usize, height: usize) -> Vec<u16>
+    pub fn read_data16(&self, buf: &mut ImageBuffer<u16>)
     {
         let mut buf_u8=[0u8;1];
         let mut buf_u16 =[0u8;2];
         let mut cur = Cursor::new(&self.data);
-
-        let mut v = Vec::new();
-        for h in 0..height {
+        
+        for h in 0..buf.height() {
             let _ = cur.read_exact(&mut buf_u8);
-            for w in 0..width {
+            for w in 0..buf.width() {
                 let value = read_u16(&mut cur, &mut buf_u16);
-                v.push(value);
+                buf.push(value);
             }
         }
-        v
 
     }
 
-    pub fn read_data8(&self, width:usize, height: usize) -> Vec<u8>
+    pub fn read_data8(&self, buf: &mut ImageBuffer<u8>)
     {
         let mut buf_u8=[0u8;1];
 
         let mut cur = Cursor::new(&self.data);
-
-        let mut v = Vec::new();
-        for h in 0..height {
+        
+        for h in 0..buf.height() {
             let _ = cur.read_exact(&mut buf_u8);
-            for w in 0..width {
+            for w in 0..buf.width() {
                 let value = read_u8(&mut cur, &mut buf_u8);
-                v.push(value);
+                buf.push(value);
             }
         }
-        v
 
     }
 

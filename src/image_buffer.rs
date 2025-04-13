@@ -14,9 +14,22 @@ pub struct ImageBuffer<T:GrayValue>
 
 
 impl<T:GrayValue> ImageBuffer<T> {
-    pub fn new(width: usize, height: usize, data: Vec<T>) -> ImageBuffer<T> {
-        ImageBuffer { width, height, data }
-        
+    pub fn new(width: usize, height: usize) -> ImageBuffer<T> {
+        ImageBuffer {
+            width,
+            height,
+            data: Vec::<T>::with_capacity(width * height)
+        }
+    }
+    
+    pub fn push(&mut self, value: T) {
+        self.data.push(value);
+    }
+    pub fn width(&self) -> usize {
+        self.width
+    }
+    pub fn height(&self) -> usize {
+        self.height
     }
 }
 
@@ -26,13 +39,15 @@ pub enum Image {
 }
 
 impl Image {
-    pub fn new(bit_depth:u8) -> Self {
+    pub fn new(width:usize, height: usize, bit_depth:u8) -> Self {
         match bit_depth {
-            8 => Image::Gray8(ImageBuffer::<u8>::default()),
-            16 => Image::Gray16(ImageBuffer::<u16>::default()),
+            8 => Image::Gray8(ImageBuffer::<u8>::new(width, height)),
+            16 => Image::Gray16(ImageBuffer::<u16>::new(width, height)),
             _ => unimplemented!(),
         }
     }
+    
+
 }
 
 
