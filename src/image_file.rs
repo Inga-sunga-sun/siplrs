@@ -5,6 +5,7 @@ use std::io::Cursor;
 use std::path::Path;
 
 pub struct ImageFile {
+    length: usize,
     data: Cursor<Vec<u8>>,
 }
 
@@ -13,11 +14,14 @@ impl ImageFile {
     where P: AsRef<Path>
     {
         let mut file = File::open(path)?;
-        let mut buf: Vec<u8> = Vec::new();
+
+        let length = file.metadata()?.len() as usize;
+        let mut buf: Vec<u8> = Vec::with_capacity(length);
+
         let _ = file.read_to_end(&mut buf)?;
         let data  = Cursor::new(buf);
         Ok(
-            Self {data}
+            Self {length, data}
         )
     }
 
@@ -26,6 +30,10 @@ impl ImageFile {
     // pub fn data(&mut self) -> &mut Cursor<Vec<u8>> {
     pub fn data(&mut self) -> &mut Cursor<Vec<u8>> {
         &mut self.data
+    }
+
+    pub fn length(&mut self) -> usize {
+        self.length
     }
 
 }

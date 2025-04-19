@@ -13,8 +13,8 @@ use crate::png::png_image;
 type Result<T> = std::result::Result<T, DecodeError>;
 #[derive(Debug,Default)]
 pub struct PngReader {
-    pub header: Vec<u8>,
-    pub data: Vec<u8>,
+    header: Vec<u8>,
+    data: Vec<u8>,
 }
 
 
@@ -23,11 +23,20 @@ pub const IHDR: [u8; 4] = [73, 72, 68, 82];
 pub const IDAT: [u8; 4] = [73, 68, 65, 84];
 pub const IEND: [u8; 4] = [73, 69, 78, 68];
 
-
 impl PngReader {
 
-    pub fn read_chunk(&mut self, img: &mut ImageFile) -> Result<()> {
+    pub fn new(length: usize) -> PngReader {
+        Self{
+            header: Vec::with_capacity(13),
+            data: Vec::with_capacity(length),
+
+        }
+    }
+
+    pub fn read_chunk(img: &mut ImageFile) -> Result<PngReader> {
         let _ = Self::check_signature(img)?;
+        let file_length = img.length();
+        let mut reader = PngReader::new(file_length);
 
         // length -> chunk_type -> chunk_data -> crc
         loop {
@@ -39,13 +48,13 @@ impl PngReader {
             let _ = Self::verify_checksum(crc, &chunk_type, &chunk_data)?;
 
             match chunk_type {
-                IHDR => self.set_header(chunk_data),
-                IDAT => self.set_data(chunk_data)?,
+                IHDR => reader.set_header(chunk_data),
+                IDAT => reader.append_data(chunk_data)?,
                 IEND => break,
                 _    => continue,
             }
         }
-        Ok(())
+        Ok(reader)
     }
 
 
@@ -104,16 +113,16 @@ impl PngReader {
         Ok(crc)
     }
 
-    pub fn set_data(&mut self, chunk_data: Vec<u8>) -> Result<()>{
+    pub fn append_data(&mut self, chunk_data: Vec<u8>) -> Result<()>{
         chunk_data.as_slice();
-        self.data = decompress_to_vec_zlib(&chunk_data)?;
+        self.data.append(&mut decompress_to_vec_zlib(&chunk_data)?);
         Ok(())
     }
     pub fn set_header(&mut self, chunk_data: Vec<u8>){
         self.header = chunk_data
     }
 
-    pub fn read_header(&self) -> Image
+    pub fn read_header(self) -> Image
     {
         let mut cursor = Cursor::new(&self.header);
         let mut buf_u8 = [0u8;1];
