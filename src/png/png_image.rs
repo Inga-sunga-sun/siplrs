@@ -15,5 +15,18 @@ pub struct Header {
 }
 
 impl Header {
+   
+    pub fn width(&self) -> usize {
+        self.width
+    }
+    pub fn height(&self) -> usize {
+        self.height
+    }
+    pub fn bit_depth(&self) -> u8 {
+        self.bit_depth
+    }
+    pub fn color_type(&self) -> u8 {
+        self.color_type
+    }
 
 }
