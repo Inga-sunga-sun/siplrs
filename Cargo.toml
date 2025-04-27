@@ -8,3 +8,4 @@ crc32fast = "1.4.2"
 miniz_oxide = "*"
 serde = { version = "1.0.217", features = ["derive"] }
 rayon = "*"
+num-traits = "*"

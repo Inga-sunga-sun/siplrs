@@ -1,20 +1,20 @@
 use std::ffi::OsStr;
 use std::fs::File;
-use std::io;
-use std::io::Read;
-use std::io::Cursor;
+use std::io::{Read, Cursor};
 use std::path::Path;
-use crate::error::DecodeError;
-use crate::image_buffer::Image;
+use crate::error::decode_error::DecodeError;
+use crate::image_buffer::buffer::{ImageBuffer};
 use crate::png::png_reader::PngReader;
+use crate::util::GrayValue;
 
 type Result<T> = std::result::Result<T, DecodeError>;
+#[derive(Debug)]
 pub struct ImageFile {
     length: usize,
     data: Cursor<Vec<u8>>,
     extension: ImageFormat,
 }
-
+#[derive(Debug)]
 pub enum ImageFormat {
     Png,
     Jpeg,
@@ -25,7 +25,7 @@ pub enum ImageFormat {
 }
 
 impl ImageFile {
-    pub fn open<P>(path:P) -> Result<Image>
+    pub fn open<P>(path:P) -> Result<ImageBuffer<GrayValue>>
     where P: AsRef<Path>
     {
         let mut file = File::open(&path)?;

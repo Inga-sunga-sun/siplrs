@@ -1,13 +1,11 @@
 
-use crate::error::DecodeError;
-use crate::image_buffer::ImageBuffer;
+use crate::error::decode_error::DecodeError;
 use crate::image_file::ImageFile;
-use crate::util::{read_u16, read_u32, read_u8};
-use crc32fast::hash;
+use crate::image_buffer::buffer::{ImageBuffer};
+use crate::util::{read_u16, read_u32, read_u8, GrayValue};
 use miniz_oxide::inflate::decompress_to_vec_zlib;
 use std::io::{Cursor, Read};
-use crate::image_buffer::Image;
-use crate::png::png_image;
+use crc32fast::hash;
 use crate::png::png_image::Header;
 
 type Result<T> = std::result::Result<T, DecodeError>;
@@ -123,22 +121,23 @@ impl PngReader {
     }
     
 
-    pub fn convert_to_image(&mut self) -> Result<Image>
+    pub fn convert_to_image(&mut self) -> Result<ImageBuffer<GrayValue>>
     {
         let header = self.header_mut();
         let mut buf_u8 = [0u8;1];
         let mut buf_u32 = [0u8;4];
 
         let header = self.read_header(&mut buf_u8, &mut buf_u32)?;
+
+        let mut image = ImageBuffer::<GrayValue>::new(&header);
         
-        let mut image = Image::new(header.width(), header.height(), header.bit_depth());
-        
-        match image {
-            Image::Gray8(ref mut img) => {
-                let _ = self.read_data8(img)?;
+        match header.bit_depth {
+            8 => {
+
+                let _ = self.read_data8(&mut image)?;
             },
-            Image::Gray16(ref mut img) => {
-                let _ = self.read_data16(img)?;
+            16 => {
+                let _ = self.read_data16(&mut image)?;
             },
             _ => unimplemented!(),
         }
@@ -169,7 +168,7 @@ impl PngReader {
         Ok(header)
     }
 
-    pub fn read_data16(&mut self, buf: &mut ImageBuffer<u16>) -> Result<()>
+    pub fn read_data16(&mut self, buf: &mut ImageBuffer<GrayValue>) -> Result<()>
     {
         let mut buf_u8=[0u8;1];
         let mut buf_u16 =[0u8;2];
@@ -184,25 +183,27 @@ impl PngReader {
         }
         Ok(())
     }
-
-    pub fn read_data8(&mut self, buf: &mut ImageBuffer<u8>) -> Result<()>
+    
+    pub fn read_data8(&mut self, buf: &mut ImageBuffer<GrayValue>) -> Result<()>
     {
         let mut buf_u8=[0u8;1];
 
         let mut cur = self.data_mut();
-        
+
         for h in 0..buf.height() {
             let _ = cur.read_exact(&mut buf_u8);
             for w in 0..buf.width() {
                 let value = read_u8(&mut cur, &mut buf_u8)?;
-                buf.push(value);
+                buf.push(value as GrayValue);
             }
         }
         Ok(())
-
     }
+    
 
 }
+
+
 
 
 

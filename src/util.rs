@@ -1,27 +1,10 @@
 use std::io;
 use std::io::{Cursor, Read};
+use num_traits::{One, Zero};
 
-pub trait GrayValue {}
-impl GrayValue for u8 {}
-impl GrayValue for u16 {}
+pub(crate) type GrayValue = u16;
 
-#[derive(Debug)]
-pub enum PixelArray {
-    Gray8(Vec<u8>),
-    Gray16(Vec<u16>),
-}
 
-impl PixelArray {
-    pub fn new(width: usize, height: usize, bit_depth: u8) -> Self {
-        match bit_depth {
-            8 => PixelArray::Gray8(Vec::<u8>::with_capacity(width * height)),
-            16 => PixelArray::Gray16(Vec::<u16>::with_capacity(width * height)),
-            _ => unimplemented!(),
-        }
-    }
-    
-
-}
 
 pub fn read_u8(cursor:&mut Cursor<Vec<u8>>, buf: &mut [u8;1]) -> io::Result<u8> {
      
